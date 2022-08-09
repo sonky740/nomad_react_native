@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
   },
   cityName: {
     fontSize: 68,
-    fontWeight: 500,
+    fontWeight: '500',
   },
   weather: {
     flex: 3,
