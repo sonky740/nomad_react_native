@@ -8,7 +8,10 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Alert,
+  Platform,
 } from 'react-native';
+import { Fontisto } from '@expo/vector-icons';
 import { theme } from './colors';
 
 const STORAGE_KEY = '@toDos';
@@ -39,10 +42,36 @@ export default function App() {
     setText('');
   };
 
+  const deleteToDo = async (key) => {
+    if (Platform.OS === 'web') {
+      const ok = confirm('Delete To Do\nAre you sure?');
+      if (ok) {
+        const newToDos = { ...toDos };
+        delete newToDos[key];
+        setToDos(newToDos);
+        await saveTodos(newToDos);
+      }
+    } else {
+      Alert.alert('Delete To Do', 'Are you sure?', [
+        { text: 'Cancel' },
+        {
+          text: 'I am sure',
+          style: 'destructive',
+          onPress: async () => {
+            const newToDos = { ...toDos };
+            delete newToDos[key];
+            setToDos(newToDos);
+            await saveTodos(newToDos);
+          },
+        },
+      ]);
+    }
+  };
+
   const loadToDos = async () => {
     try {
       const s = await AsyncStorage.getItem(STORAGE_KEY);
-      setToDos(JSON.parse(s));
+      if (s) setToDos(JSON.parse(s));
     } catch (error) {
       throw new Error(error.message || '못 불러옴');
     }
@@ -58,7 +87,11 @@ export default function App() {
       <View style={styles.header}>
         <TouchableOpacity onPress={work}>
           <Text
-            style={{ ...styles.btnText, color: working ? '#fff' : theme.grey }}
+            style={{
+              fontSize: 38,
+              fontWeight: '600',
+              color: working ? '#fff' : theme.grey,
+            }}
           >
             Work
           </Text>
@@ -66,7 +99,8 @@ export default function App() {
         <TouchableOpacity onPress={travel}>
           <Text
             style={{
-              ...styles.btnText,
+              fontSize: 38,
+              fontWeight: '600',
               color: !working ? 'white' : theme.grey,
             }}
           >
@@ -88,6 +122,9 @@ export default function App() {
           toDos[key].working === working ? (
             <View style={styles.toDo} key={key}>
               <Text style={styles.toDoText}>{toDos[key].text}</Text>
+              <TouchableOpacity onPress={() => deleteToDo(key)}>
+                <Fontisto name="trash" size={18} color="#fefefe" />
+              </TouchableOpacity>
             </View>
           ) : null
         )}
@@ -107,10 +144,6 @@ const styles = StyleSheet.create({
     marginTop: 100,
     flexDirection: 'row',
   },
-  btnText: {
-    fontSize: 38,
-    fontWeight: '600',
-  },
   input: {
     paddingVertical: 15,
     paddingHorizontal: 20,
@@ -125,6 +158,9 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 20,
     borderRadius: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   toDoText: {
     color: '#fff',
